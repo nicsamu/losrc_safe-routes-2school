@@ -1,54 +1,47 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <title>Safe Routes Like Map</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
+  <head>
+    <meta charset="utf-8" />
+    <title>Safe Routes Like Map</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
+    <!-- Firebase -->
+    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <!-- ArcGIS -->
-  <script src="https://js.arcgis.com/4.27/" defer></script>
+    <!-- ArcGIS JS API -->
+    <script defer src="https://js.arcgis.com/4.27/"></script>
 
-  <!-- Load Firebase init and app AFTER scripts -->
-  <script defer src="firebase-init.js"></script>
-  <script defer src="app.js"></script>
+    <!-- Firebase config and app logic -->
+    <script defer src="firebase-init.js"></script>
+    <script defer src="app.js"></script>
 
-  <style>
-    html, body, #viewDiv {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-    }
+    <style>
+      html, body, #viewDiv {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+      }
 
-    #likeBtn {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      z-index: 10;
-      padding: 12px 20px;
-      font-size: 18px;
-      background-color: #ffffffcc;
-      border: 2px solid #2196F3;
-      border-radius: 8px;
-      color: #2196F3;
-      font-weight: bold;
-      cursor: pointer;
-      display: none;
-      transition: background 0.2s ease;
-    }
+      .like-button {
+        display: inline-block;
+        padding: 6px 12px;
+        background-color: #30737b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      }
 
-    #likeBtn:hover {
-      background: #e3f2fd;
-    }
-  </style>
-</head>
-<body>
-  <div id="viewDiv"></div>
-  <button id="likeBtn">👍 Like</button>
-</body>
+      .like-button:hover {
+        background-color: #25595f;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
 </html>
