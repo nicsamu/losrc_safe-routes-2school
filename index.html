@@ -54,7 +54,9 @@
   <!-- ArcGIS JS API -->
   <script src="https://js.arcgis.com/4.27/"></script>
 
-  <!-- App logic -->
-  <script src="app.js"></script>
+  <!-- Load your AMD app after the ArcGIS API is ready -->
+  <script>
+    require(["./app.js"]);
+  </script>
 </body>
 </html>
