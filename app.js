@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     "esri/WebMap",
     "esri/views/MapView"
   ], function (WebMap, MapView) {
+
     const webmap = new WebMap({
       portalItem: {
         id: "b30daca1af104a7896a409f51e714e24"
@@ -25,25 +26,51 @@ document.addEventListener("DOMContentLoaded", function () {
       return uid;
     }
 
+    // Create a little +1 animation element
+    function showLikeAnimation(view) {
+      const anim = document.createElement("div");
+      anim.textContent = "+1";
+      anim.style.position = "absolute";
+      anim.style.fontSize = "24px";
+      anim.style.fontWeight = "bold";
+      anim.style.color = "#30737b";
+      anim.style.left = "50%";
+      anim.style.top = "50%";
+      anim.style.transform = "translate(-50%, -50%)";
+      anim.style.opacity = "1";
+      anim.style.transition = "all 0.8s ease-out";
+      document.body.appendChild(anim);
+
+      setTimeout(() => {
+        anim.style.top = "30%";
+        anim.style.opacity = "0";
+      }, 10);
+
+      setTimeout(() => {
+        anim.remove();
+      }, 1000);
+    }
+
     view.when(() => {
       console.log("🗺️ Web map and view loaded");
 
-      // Watch for popup changes and inject Like action if eligible
+      // Add Like action dynamically when popup opens
       view.popup.watch("selectedFeature", (graphic) => {
-        if (!graphic || !graphic.attributes || !graphic.attributes.likes) return;
+        if (!graphic || !graphic.attributes) return;
 
         const actions = view.popup.actions.toArray();
         const alreadyHasLike = actions.some(action => action.id === "like-action");
 
-        if (!alreadyHasLike) {
+        if (!alreadyHasLike && "likes" in graphic.attributes) {
           view.popup.actions.add({
-            id: "like-action",
             title: "Like",
+            id: "like-action",
             className: "esri-icon-thumbs-up"
           });
         }
       });
 
+      // Handle Like click
       view.popup.viewModel.on("trigger-action", async (event) => {
         if (event.action.id !== "like-action") return;
 
@@ -73,25 +100,21 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         const layer = graphic.layer;
-
         layer.applyEdits({ updateFeatures: [updatedFeature] })
           .then(() => {
-            console.log("✅ Likes updated");
-
-            // Update the value in memory
+            console.log("✅ Likes updated via applyEdits");
             graphic.attributes.likes = updatedLikes;
 
-            // Try to update the popup HTML directly (if possible)
-            const popupContentNode = view.popup.content;
-            if (typeof popupContentNode === "string") {
-              view.popup.content = popupContentNode.replace(
+            // 🎉 Animate +1
+            showLikeAnimation(view);
+
+            // 🔁 Update popup content live (only works if string-based content)
+            if (typeof view.popup.content === "string") {
+              view.popup.content = view.popup.content.replace(
                 /<strong>Likes:<\/strong>\s*\d+/,
                 `<strong>Likes:</strong> ${updatedLikes}`
               );
             }
-
-            // Optional: success message
-            // alert("Thanks for liking!");
           })
           .catch(err => console.error("❌ Failed to apply edit:", err));
       });
