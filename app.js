@@ -26,7 +26,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return uid;
     }
 
-    // Create a little +1 animation element
     function showLikeAnimation(view) {
       const anim = document.createElement("div");
       anim.textContent = "+1";
@@ -54,23 +53,28 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Web map and view loaded");
 
-      // Add Like action dynamically when popup opens
-      view.popup.viewModel.watch("selectedFeature", (graphic) => {
+      // Listen for popup opening
+      view.popup.watch("visible", (isVisible) => {
+        if (!isVisible) return;
+
+        const graphic = view.popup.selectedFeature;
         if (!graphic || !graphic.attributes) return;
 
+        const hasLikes = "likes" in graphic.attributes;
         const actions = view.popup.actions.toArray();
         const alreadyHasLike = actions.some(action => action.id === "like-action");
 
-        if (!alreadyHasLike && "likes" in graphic.attributes) {
+        if (hasLikes && !alreadyHasLike) {
           view.popup.actions.add({
             title: "Like",
             id: "like-action",
             className: "esri-icon-thumbs-up"
           });
+          console.log("👍 Like action added to popup.");
         }
       });
 
-      // Handle Like click
+      // Handle Like button click
       view.popup.viewModel.on("trigger-action", async (event) => {
         if (event.action.id !== "like-action") return;
 
@@ -102,13 +106,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const layer = graphic.layer;
         layer.applyEdits({ updateFeatures: [updatedFeature] })
           .then(() => {
-            console.log("✅ Likes updated via applyEdits");
+            console.log("✅ Likes updated");
             graphic.attributes.likes = updatedLikes;
 
-            // 🎉 Animate +1
+            // 🌀 Animate
             showLikeAnimation(view);
 
-            // 🔁 Update popup content live (only works if string-based content)
+            // 🔁 Update the visible popup content string (if it is string)
             if (typeof view.popup.content === "string") {
               view.popup.content = view.popup.content.replace(
                 /<strong>Likes:<\/strong>\s*\d+/,
