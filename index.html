@@ -6,23 +6,30 @@
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
 
-  <!-- ArcGIS & Firebase SDKs -->
+  <!-- Load ArcGIS and Firebase -->
   <script defer src="https://js.arcgis.com/4.27/"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
-  <!-- ✅ Dynamically load app.js AFTER Firebase is ready -->
+  <!-- 🔧 Load app.js only AFTER Firebase is ready -->
   <script>
     window.addEventListener("load", () => {
+      console.log("🕓 Window loaded, checking for Firebase...");
+
       const checkFirebaseLoaded = () => {
         if (window.firebase && firebase.firestore) {
+          console.log("✅ Firebase ready, loading app.js...");
           const script = document.createElement("script");
-          script.src = "app.js";
+          script.src = "app.js"; // 🔁 If needed, rename to main.js and update here
+          script.onload = () => console.log("✅ app.js loaded successfully");
+          script.onerror = () => console.error("❌ Failed to load app.js");
           document.body.appendChild(script);
         } else {
+          console.log("🔁 Firebase not ready yet, retrying...");
           setTimeout(checkFirebaseLoaded, 50);
         }
       };
+
       checkFirebaseLoaded();
     });
   </script>
