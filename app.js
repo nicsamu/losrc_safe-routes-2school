@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return uid;
     }
 
-    function showLikeAnimation(view) {
+    function showLikeAnimation() {
       const anim = document.createElement("div");
       anim.textContent = "+1";
       anim.style.position = "absolute";
@@ -53,9 +53,9 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Web map and view loaded");
 
-      // Listen for popup opening
-      view.popup.watch("visible", (isVisible) => {
-        if (!isVisible) return;
+      // ✅ Inject Like button into popup when it becomes visible
+      view.popup.viewModel.watch("state", (state) => {
+        if (state !== "visible") return;
 
         const graphic = view.popup.selectedFeature;
         if (!graphic || !graphic.attributes) return;
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
-      // Handle Like button click
+      // ✅ Handle like button click
       view.popup.viewModel.on("trigger-action", async (event) => {
         if (event.action.id !== "like-action") return;
 
@@ -109,10 +109,10 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("✅ Likes updated");
             graphic.attributes.likes = updatedLikes;
 
-            // 🌀 Animate
-            showLikeAnimation(view);
+            // 🎉 Animate +1
+            showLikeAnimation();
 
-            // 🔁 Update the visible popup content string (if it is string)
+            // 🌀 Update popup content if it's plain HTML
             if (typeof view.popup.content === "string") {
               view.popup.content = view.popup.content.replace(
                 /<strong>Likes:<\/strong>\s*\d+/,
