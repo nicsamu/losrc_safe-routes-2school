@@ -3,9 +3,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   require([
     "esri/WebMap",
-    "esri/views/MapView",
-    "esri/widgets/Popup"
+    "esri/views/MapView"
   ], function (WebMap, MapView) {
+
     const webmap = new WebMap({
       portalItem: {
         id: "b30daca1af104a7896a409f51e714e24"
@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
       map: webmap
     });
 
+    // Generate a persistent user ID for Firebase tracking
     function getUserId() {
       let uid = localStorage.getItem("srt_user_id");
       if (!uid) {
@@ -26,8 +27,30 @@ document.addEventListener("DOMContentLoaded", function () {
       return uid;
     }
 
-    view.popup.viewModel.on("trigger-action", async function (event) {
-      if (event.action.id === "like-action") {
+    view.when(() => {
+      console.log("🗺️ Web map and view loaded");
+
+      // Add popup action to each feature layer that contains the 'likes' field
+      webmap.layers.forEach(layer => {
+        layer.when(() => {
+          if (layer.fields.some(f => f.name === "likes")) {
+            console.log(`👍 Adding Like action to layer: ${layer.title}`);
+
+            layer.popupTemplate.actions = [
+              ...(layer.popupTemplate.actions || []),
+              {
+                title: "Like",
+                id: "like-action",
+                className: "esri-icon-thumbs-up"
+              }
+            ];
+          }
+        });
+      });
+
+      view.popup.viewModel.on("trigger-action", async function (event) {
+        if (event.action.id !== "like-action") return;
+
         const graphic = view.popup.selectedFeature;
         if (!graphic || !window.db) return;
 
@@ -53,38 +76,24 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         const layer = graphic.layer;
+
         layer.applyEdits({ updateFeatures: [updatedFeature] })
           .then(() => {
-            alert("Thanks for liking!");
-            // Update the popup content manually
-            graphic.attributes.likes += 1;
-            view.popup.content = generatePopupContent(graphic);
-          })
-          .catch((err) => console.error("Error updating likes:", err));
-      }
-    });
+            console.log("✅ Likes updated via applyEdits");
 
-    view.when(() => {
-      webmap.layers.forEach(layer => {
-        layer.popupTemplate = {
-          title: "{Title}",
-          content: (feature) => generatePopupContent(feature.graphic),
-          actions: [{
-            id: "like-action",
-            title: "Like",
-            className: "esri-icon-thumb-up"
-          }]
-        };
+            // Refresh the popup so the user sees the updated count
+            setTimeout(() => {
+              layer.queryFeatureCount().then(() => {
+                view.popup.close();
+                view.popup.open({
+                  features: [graphic],
+                  location: graphic.geometry
+                });
+              });
+            }, 500);
+          })
+          .catch(err => console.error("❌ Error updating likes:", err));
       });
     });
-
-    function generatePopupContent(graphic) {
-      const likes = graphic.attributes.likes || 0;
-      return `
-        <p><strong>Description:</strong> ${graphic.attributes.Description || "No description"}</p>
-        <p><strong>Likes:</strong> ${likes}</p>
-        <p>Click the <span style="color: #30737b;">👍</span> button above to support this location.</p>
-      `;
-    }
   });
 });
