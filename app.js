@@ -51,10 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return null;
       }
 
-      // Save user like
       await userRef.set({ [objectId]: true }, { merge: true });
-
-      // Increment like count
       await summaryRef.set({
         [objectId]: firebase.firestore.FieldValue.increment(1)
       }, { merge: true });
@@ -70,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const graphic = view.popup.selectedFeature;
         if (!graphic || !graphic.attributes?.OBJECTID) return;
 
-        const objectId = graphic.attributes.OBJECTID;
+        const objectId = graphic.attributes.OBJECTID.toString();
         const count = await getLikeCount(objectId);
 
         view.popup.actions.removeAll();
@@ -89,11 +86,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const objectId = graphic.attributes.OBJECTID.toString();
         const updatedCount = await incrementLike(objectId);
         if (updatedCount !== null) {
-          // Update label
           const likeAction = view.popup.actions.find(a => a.id === "like-action");
-          if (likeAction) {
-            likeAction.title = `${updatedCount} Likes`;
-          }
+          if (likeAction) likeAction.title = `${updatedCount} Likes`;
           showLikeBurst();
         }
       });
