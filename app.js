@@ -1,108 +1,90 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("✅ DOM loaded. Firebase and ArcGIS setup starting...");
-
-  function getUserId() {
-    let uid = localStorage.getItem("srt_user_id");
-    if (!uid) {
-      uid = "user_" + Math.random().toString(36).substring(2, 15);
-      localStorage.setItem("srt_user_id", uid);
-    }
-    return uid;
-  }
+  console.log("✅ DOM loaded. Initializing map...");
 
   require([
-    "esri/Map",
+    "esri/WebMap",
     "esri/views/MapView",
-    "esri/layers/FeatureLayer"
-  ], function(Map, MapView, FeatureLayer) {
-
-    const concernLayer = new FeatureLayer({
-      url: "https://services1.arcgis.com/dUkMSguHjSnNcU9J/arcgis/rest/services/School_Route_Safety_Concerns_(Public_View)/FeatureServer/0",
-      outFields: ["*"],
-      popupTemplate: {
-        title: "Concern Location",
-        content: `<p><strong>Likes:</strong> {likes}</p><p>Click the 👍 Like button to support this location.</p>`
-      },
-      renderer: {
-        type: "simple",
-        symbol: {
-          type: "simple-marker",
-          color: "blue",
-          size: 10,
-          outline: {
-            color: "white",
-            width: 1
-          }
-        }
+    "esri/widgets/Popup"
+  ], function (WebMap, MapView) {
+    const webmap = new WebMap({
+      portalItem: {
+        id: "b30daca1af104a7896a409f51e714e24"
       }
-    });
-
-    const map = new Map({
-      basemap: "streets-navigation-vector",
-      layers: [concernLayer]
     });
 
     const view = new MapView({
       container: "viewDiv",
-      map: map,
-      zoom: 12,
-      center: [-90.0715, 29.9511] // adjust to your location
+      map: webmap
     });
 
-    const likeBtn = document.getElementById("likeBtn");
-    let selectedFeature = null;
+    function getUserId() {
+      let uid = localStorage.getItem("srt_user_id");
+      if (!uid) {
+        uid = "user_" + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("srt_user_id", uid);
+      }
+      return uid;
+    }
+
+    view.popup.viewModel.on("trigger-action", async function (event) {
+      if (event.action.id === "like-action") {
+        const graphic = view.popup.selectedFeature;
+        if (!graphic || !window.db) return;
+
+        const objectId = graphic.attributes.OBJECTID;
+        const userId = getUserId();
+        const likeDocRef = window.db.collection("likes").doc(userId);
+        const doc = await likeDocRef.get();
+        const alreadyLiked = doc.exists && doc.data()?.[`feature_${objectId}`];
+
+        if (alreadyLiked) {
+          alert("You already liked this.");
+          return;
+        }
+
+        await likeDocRef.set({ [`feature_${objectId}`]: true }, { merge: true });
+
+        const currentLikes = graphic.attributes.likes || 0;
+        const updatedFeature = {
+          attributes: {
+            OBJECTID: objectId,
+            likes: currentLikes + 1
+          }
+        };
+
+        const layer = graphic.layer;
+        layer.applyEdits({ updateFeatures: [updatedFeature] })
+          .then(() => {
+            alert("Thanks for liking!");
+            // Update the popup content manually
+            graphic.attributes.likes += 1;
+            view.popup.content = generatePopupContent(graphic);
+          })
+          .catch((err) => console.error("Error updating likes:", err));
+      }
+    });
 
     view.when(() => {
-      concernLayer.queryExtent().then(function(response) {
-        if (response.extent) {
-          view.goTo(response.extent.expand(1.5));
-        }
-      });
-
-      view.on("click", async (event) => {
-        const response = await view.hitTest(event);
-        const result = response.results.find(r => r.graphic && r.graphic.layer === concernLayer);
-
-        if (result) {
-          selectedFeature = result.graphic;
-          likeBtn.style.display = "inline-block";
-        } else {
-          selectedFeature = null;
-          likeBtn.style.display = "none";
-        }
+      webmap.layers.forEach(layer => {
+        layer.popupTemplate = {
+          title: "{Title}",
+          content: (feature) => generatePopupContent(feature.graphic),
+          actions: [{
+            id: "like-action",
+            title: "Like",
+            className: "esri-icon-thumb-up"
+          }]
+        };
       });
     });
 
-    likeBtn.addEventListener("click", async () => {
-      if (!selectedFeature || !window.db) return;
-
-      const objectId = selectedFeature.attributes.OBJECTID;
-      const userId = getUserId();
-      const likeDocRef = window.db.collection("likes").doc(userId);
-      const doc = await likeDocRef.get();
-      const alreadyLiked = doc.exists && doc.data()?.[`feature_${objectId}`];
-
-      if (alreadyLiked) {
-        alert("You already liked this.");
-        return;
-      }
-
-      await likeDocRef.set({ [`feature_${objectId}`]: true }, { merge: true });
-
-      const currentLikes = selectedFeature.attributes.likes || 0;
-      const updatedFeature = {
-        attributes: {
-          OBJECTID: objectId,
-          likes: currentLikes + 1
-        }
-      };
-
-      concernLayer.applyEdits({ updateFeatures: [updatedFeature] })
-        .then(() => {
-          alert("Thanks for liking!");
-          likeBtn.style.display = "none";
-        })
-        .catch(err => console.error("Error applying edits:", err));
-    });
+    function generatePopupContent(graphic) {
+      const likes = graphic.attributes.likes || 0;
+      return `
+        <p><strong>Description:</strong> ${graphic.attributes.Description || "No description"}</p>
+        <p><strong>Likes:</strong> ${likes}</p>
+        <p>Click the <span style="color: #30737b;">👍</span> button above to support this location.</p>
+      `;
+    }
   });
 });
