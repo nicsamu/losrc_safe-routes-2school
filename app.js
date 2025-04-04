@@ -1,19 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("✅ DOM loaded. Starting Firebase + ArcGIS setup...");
+  console.log("✅ DOM loaded. Firebase and ArcGIS setup starting...");
 
-  // ✅ Firebase config (v8 compatible)
-  const firebaseConfig = {
-    apiKey: "AIzaSyCC5bxMbUrzFVXI0mVUBXL4STHuNxfWODo",
-    authDomain: "school-route-safety-concerns.firebaseapp.com",
-    projectId: "school-route-safety-concerns",
-    storageBucket: "school-route-safety-concerns.appspot.com",
-    messagingSenderId: "753357994973",
-    appId: "1:753357994973:web:16d04af6a93e84dc465434",
-    measurementId: "G-BE0BNEQ6HD"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  const db = window.db;
 
   function getUserId() {
     let uid = localStorage.getItem("srt_user_id");
