@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Safe Routes Likes Demo</title>
+  <title>Safe Routes Likes</title>
   <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
   <script src="https://js.arcgis.com/4.27/"></script>
   <style>
     html, body, #viewDiv {
-      padding: 0;
       margin: 0;
+      padding: 0;
       height: 100%;
       width: 100%;
     }
@@ -17,17 +17,29 @@
     .esri-icon-thumbs-up::before {
       color: #30737b !important;
     }
+
+    .like-burst {
+      position: absolute;
+      font-size: 24px;
+      color: #30737b;
+      font-weight: bold;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 1;
+      transition: all 0.7s ease-out;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <div id="viewDiv"></div>
 
-  <!-- Firebase Setup -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
   <script>
-    console.log("🔥 Firebase available, initializing...");
-
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCC5bxMbUrzFVXI0mVUBXL4STHuNxfWODo",
       authDomain: "school-route-safety-concerns.firebaseapp.com",
@@ -42,7 +54,7 @@
     window.db = firebase.firestore();
   </script>
 
-  <!-- App logic -->
+  <!-- App Logic -->
   <script src="app.js"></script>
 </body>
 </html>
