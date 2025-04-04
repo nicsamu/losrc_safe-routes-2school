@@ -6,12 +6,28 @@
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
 
-  <!-- ArcGIS & Firebase v8 (Classic) -->
+  <!-- ArcGIS and Firebase v8 -->
   <script src="https://js.arcgis.com/4.27/"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <!-- ✅ Now load app.js like normal -->
+  <!-- Firebase config and initialization -->
+  <script>
+    console.log("🚀 Initializing Firebase...");
+    const firebaseConfig = {
+      apiKey: "AIzaSyCC5bxMbUrzFVXI0mVUBXL4STHuNxfWODo",
+      authDomain: "school-route-safety-concerns.firebaseapp.com",
+      projectId: "school-route-safety-concerns",
+      storageBucket: "school-route-safety-concerns.appspot.com",
+      messagingSenderId: "753357994973",
+      appId: "1:753357994973:web:16d04af6a93e84dc465434",
+      measurementId: "G-BE0BNEQ6HD"
+    };
+    firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore();
+  </script>
+
+  <!-- Load app.js after Firebase is ready -->
   <script src="app.js"></script>
 
   <style>
@@ -21,7 +37,6 @@
       height: 100%;
       width: 100%;
     }
-
     #likeBtn {
       position: fixed;
       bottom: 20px;
@@ -38,7 +53,6 @@
       display: none;
       transition: background 0.2s ease;
     }
-
     #likeBtn:hover {
       background: #e3f2fd;
     }
