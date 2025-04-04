@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", function () {
     "esri/WebMap",
     "esri/views/MapView"
   ], function (WebMap, MapView) {
-
     const webmap = new WebMap({
       portalItem: {
         id: "b30daca1af104a7896a409f51e714e24"
@@ -29,28 +28,20 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Web map and view loaded");
 
-      webmap.layers.forEach(layer => {
-        layer.when(() => {
-          const hasLikesField = layer.fields?.some(f => f.name === "likes");
+      // Watch for popup changes and inject Like action if eligible
+      view.popup.watch("selectedFeature", (graphic) => {
+        if (!graphic || !graphic.attributes || !graphic.attributes.likes) return;
 
-          if (hasLikesField && layer.popupTemplate) {
-            console.log(`👍 Enabling Like action on layer: ${layer.title}`);
+        const actions = view.popup.actions.toArray();
+        const alreadyHasLike = actions.some(action => action.id === "like-action");
 
-            // Add like action if it doesn't exist yet
-            const actions = layer.popupTemplate.actions || [];
-            const likeExists = actions.some(action => action.id === "like-action");
-
-            if (!likeExists) {
-              actions.push({
-                title: "Like",
-                id: "like-action",
-                className: "esri-icon-thumbs-up"
-              });
-            }
-
-            layer.popupTemplate.actions = actions;
-          }
-        });
+        if (!alreadyHasLike) {
+          view.popup.actions.add({
+            id: "like-action",
+            title: "Like",
+            className: "esri-icon-thumbs-up"
+          });
+        }
       });
 
       view.popup.viewModel.on("trigger-action", async (event) => {
@@ -73,26 +64,34 @@ document.addEventListener("DOMContentLoaded", function () {
         await likeDocRef.set({ [`feature_${objectId}`]: true }, { merge: true });
 
         const currentLikes = graphic.attributes.likes || 0;
+        const updatedLikes = currentLikes + 1;
         const updatedFeature = {
           attributes: {
             OBJECTID: objectId,
-            likes: currentLikes + 1
+            likes: updatedLikes
           }
         };
 
         const layer = graphic.layer;
+
         layer.applyEdits({ updateFeatures: [updatedFeature] })
           .then(() => {
             console.log("✅ Likes updated");
 
-            // Reload popup with updated info
-            setTimeout(() => {
-              view.popup.close();
-              view.popup.open({
-                features: [graphic],
-                location: graphic.geometry
-              });
-            }, 500);
+            // Update the value in memory
+            graphic.attributes.likes = updatedLikes;
+
+            // Try to update the popup HTML directly (if possible)
+            const popupContentNode = view.popup.content;
+            if (typeof popupContentNode === "string") {
+              view.popup.content = popupContentNode.replace(
+                /<strong>Likes:<\/strong>\s*\d+/,
+                `<strong>Likes:</strong> ${updatedLikes}`
+              );
+            }
+
+            // Optional: success message
+            // alert("Thanks for liking!");
           })
           .catch(err => console.error("❌ Failed to apply edit:", err));
       });
