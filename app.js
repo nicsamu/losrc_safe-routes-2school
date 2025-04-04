@@ -62,8 +62,8 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Map and view loaded.");
 
-      view.popup.viewModel.watch("state", async (state) => {
-        if (state !== "visible") return;
+      view.popup.watch("visible", async (visible) => {
+        if (!visible) return;
         const graphic = view.popup.selectedFeature;
         if (!graphic || !graphic.attributes?.OBJECTID) return;
 
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       });
 
-      view.popup.viewModel.on("trigger-action", async (event) => {
+      view.popup.on("trigger-action", async (event) => {
         if (event.action.id !== "like-action") return;
         const graphic = view.popup.selectedFeature;
         if (!graphic?.attributes?.OBJECTID) return;
