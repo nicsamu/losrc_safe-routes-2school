@@ -53,7 +53,6 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Web map and view loaded");
 
-      // ✅ Inject Like button into popup when it becomes visible
       view.popup.viewModel.watch("state", (state) => {
         if (state !== "visible") return;
 
@@ -74,7 +73,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
-      // ✅ Handle like button click
       view.popup.viewModel.on("trigger-action", async (event) => {
         if (event.action.id !== "like-action") return;
 
@@ -109,10 +107,8 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("✅ Likes updated");
             graphic.attributes.likes = updatedLikes;
 
-            // 🎉 Animate +1
             showLikeAnimation();
 
-            // 🌀 Update popup content if it's plain HTML
             if (typeof view.popup.content === "string") {
               view.popup.content = view.popup.content.replace(
                 /<strong>Likes:<\/strong>\s*\d+/,
