@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", function () {
       map: webmap
     });
 
-    // Generate a persistent user ID for Firebase tracking
     function getUserId() {
       let uid = localStorage.getItem("srt_user_id");
       if (!uid) {
@@ -30,25 +29,31 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Web map and view loaded");
 
-      // Add popup action to each feature layer that contains the 'likes' field
       webmap.layers.forEach(layer => {
         layer.when(() => {
-          if (layer.fields.some(f => f.name === "likes")) {
-            console.log(`👍 Adding Like action to layer: ${layer.title}`);
+          const hasLikesField = layer.fields?.some(f => f.name === "likes");
 
-            layer.popupTemplate.actions = [
-              ...(layer.popupTemplate.actions || []),
-              {
+          if (hasLikesField && layer.popupTemplate) {
+            console.log(`👍 Enabling Like action on layer: ${layer.title}`);
+
+            // Add like action if it doesn't exist yet
+            const actions = layer.popupTemplate.actions || [];
+            const likeExists = actions.some(action => action.id === "like-action");
+
+            if (!likeExists) {
+              actions.push({
                 title: "Like",
                 id: "like-action",
                 className: "esri-icon-thumbs-up"
-              }
-            ];
+              });
+            }
+
+            layer.popupTemplate.actions = actions;
           }
         });
       });
 
-      view.popup.viewModel.on("trigger-action", async function (event) {
+      view.popup.viewModel.on("trigger-action", async (event) => {
         if (event.action.id !== "like-action") return;
 
         const graphic = view.popup.selectedFeature;
@@ -76,23 +81,20 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         const layer = graphic.layer;
-
         layer.applyEdits({ updateFeatures: [updatedFeature] })
           .then(() => {
-            console.log("✅ Likes updated via applyEdits");
+            console.log("✅ Likes updated");
 
-            // Refresh the popup so the user sees the updated count
+            // Reload popup with updated info
             setTimeout(() => {
-              layer.queryFeatureCount().then(() => {
-                view.popup.close();
-                view.popup.open({
-                  features: [graphic],
-                  location: graphic.geometry
-                });
+              view.popup.close();
+              view.popup.open({
+                features: [graphic],
+                location: graphic.geometry
               });
             }, 500);
           })
-          .catch(err => console.error("❌ Error updating likes:", err));
+          .catch(err => console.error("❌ Failed to apply edit:", err));
       });
     });
   });
