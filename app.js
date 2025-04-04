@@ -62,35 +62,49 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Map and view loaded.");
 
-      view.popup.watch("visible", async (visible) => {
-        if (!visible) return;
-        const graphic = view.popup.selectedFeature;
-        if (!graphic || !graphic.attributes?.OBJECTID) return;
+      const interval = setInterval(() => {
+        if (!view.popup || !view.popup.visible) return;
 
-        const objectId = graphic.attributes.OBJECTID.toString();
-        const count = await getLikeCount(objectId);
+        console.log("📡 Watching for popup visibility...");
+        clearInterval(interval); // Prevent duplicate watchers
 
-        view.popup.actions.removeAll();
-        view.popup.actions.add({
-          title: `${count} Likes`,
-          id: "like-action",
-          className: "esri-icon-thumbs-up"
+        view.popup.watch("visible", async (visible) => {
+          console.log("👁 Popup visible:", visible);
+          if (!visible) return;
+
+          const graphic = view.popup.selectedFeature;
+          if (!graphic || !graphic.attributes?.OBJECTID) {
+            console.warn("⚠️ No OBJECTID on selected feature.");
+            return;
+          }
+
+          const objectId = graphic.attributes.OBJECTID.toString();
+          const count = await getLikeCount(objectId);
+          console.log(`👍 Likes for OBJECTID ${objectId}:`, count);
+
+          view.popup.actions.removeAll();
+          view.popup.actions.add({
+            title: `${count} Likes`,
+            id: "like-action",
+            className: "esri-icon-thumbs-up"
+          });
         });
-      });
 
-      view.popup.on("trigger-action", async (event) => {
-        if (event.action.id !== "like-action") return;
-        const graphic = view.popup.selectedFeature;
-        if (!graphic?.attributes?.OBJECTID) return;
+        view.popup.on("trigger-action", async (event) => {
+          if (event.action.id !== "like-action") return;
 
-        const objectId = graphic.attributes.OBJECTID.toString();
-        const updatedCount = await incrementLike(objectId);
-        if (updatedCount !== null) {
-          const likeAction = view.popup.actions.find(a => a.id === "like-action");
-          if (likeAction) likeAction.title = `${updatedCount} Likes`;
-          showLikeBurst();
-        }
-      });
+          const graphic = view.popup.selectedFeature;
+          if (!graphic?.attributes?.OBJECTID) return;
+
+          const objectId = graphic.attributes.OBJECTID.toString();
+          const updatedCount = await incrementLike(objectId);
+          if (updatedCount !== null) {
+            const likeAction = view.popup.actions.find(a => a.id === "like-action");
+            if (likeAction) likeAction.title = `${updatedCount} Likes`;
+            showLikeBurst();
+          }
+        });
+      }, 300);
     });
   });
 });
