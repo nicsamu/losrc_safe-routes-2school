@@ -1,35 +1,48 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Safe Routes Like Map</title>
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Safe Routes Likes Demo</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.27/"></script>
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
 
-    <!-- Firebase -->
-    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    .esri-icon-thumbs-up::before {
+      color: #30737b !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewDiv"></div>
 
-    <!-- ArcGIS JS API -->
-    <script defer src="https://js.arcgis.com/4.27/"></script>
+  <!-- Firebase Setup -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+  <script>
+    console.log("🔥 Firebase available, initializing...");
 
-    <!-- Firebase config and app logic -->
-    <script defer src="firebase-init.js"></script>
-    <script defer src="app.js"></script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCC5bxMbUrzFVXI0mVUBXL4STHuNxfWODo",
+      authDomain: "school-route-safety-concerns.firebaseapp.com",
+      projectId: "school-route-safety-concerns",
+      storageBucket: "school-route-safety-concerns.appspot.com",
+      messagingSenderId: "753357994973",
+      appId: "1:753357994973:web:16d04af6a93e84dc465434",
+      measurementId: "G-BE0BNEQ6HD"
+    };
 
-    <style>
-      html, body, #viewDiv {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
-      }
-      .esri-icon-thumbs-up::before {
-        color: #30737b !important;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="viewDiv"></div>
-  </body>
+    firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore();
+  </script>
+
+  <!-- App logic -->
+  <script src="app.js"></script>
+</body>
 </html>
