@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log("🗺️ Web map and view loaded");
 
       // Add Like action dynamically when popup opens
-      view.popup.watch("selectedFeature", (graphic) => {
+      view.popup.viewModel.watch("selectedFeature", (graphic) => {
         if (!graphic || !graphic.attributes) return;
 
         const actions = view.popup.actions.toArray();
