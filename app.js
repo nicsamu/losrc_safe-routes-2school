@@ -7,7 +7,7 @@ define([
 
   const webmap = new WebMap({
     portalItem: {
-      id: "b30daca1af104a7896a409f51e714e24"
+      id: "b30daca1af104a7896a409f51e714e24" // Your WebMap ID
     }
   });
 
@@ -65,29 +65,28 @@ define([
   view.when(() => {
     console.log("🗺️ Map and view loaded.");
 
-    reactiveUtils.watch(() => view.popup.visible, async (visible) => {
-      console.log("👁 Popup visibility changed:", visible);
-      if (!visible) return;
+    view.on("click", () => {
+      setTimeout(async () => {
+        const graphic = view.popup?.selectedFeature;
+        if (!graphic || !graphic.attributes?.OBJECTID) {
+          console.warn("⚠️ No OBJECTID on selected feature.");
+          return;
+        }
 
-      const graphic = view.popup.selectedFeature;
-      if (!graphic || !graphic.attributes?.OBJECTID) {
-        console.warn("⚠️ No OBJECTID on selected feature.");
-        return;
-      }
+        const objectId = graphic.attributes.OBJECTID.toString();
+        const count = await getLikeCount(objectId);
+        console.log(`👍 Likes for OBJECTID ${objectId}:`, count);
 
-      const objectId = graphic.attributes.OBJECTID.toString();
-      const count = await getLikeCount(objectId);
-      console.log(`👍 Likes for OBJECTID ${objectId}:`, count);
-
-      view.popup.actions.removeAll();
-      view.popup.actions.add({
-        title: `${count} Likes`,
-        id: "like-action",
-        className: "esri-icon-thumbs-up"
-      });
+        view.popup.actions.removeAll();
+        view.popup.actions.add({
+          title: `${count} Likes`,
+          id: "like-action",
+          className: "esri-icon-thumbs-up"
+        });
+      }, 500); // wait briefly for popup to open
     });
 
-    view.popup.on("trigger-action", async (event) => {
+    view.popup.viewModel.on("trigger-action", async (event) => {
       if (event.action.id !== "like-action") return;
 
       const graphic = view.popup.selectedFeature;
