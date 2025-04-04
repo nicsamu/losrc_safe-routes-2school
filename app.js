@@ -7,7 +7,7 @@ define([
 
   const webmap = new WebMap({
     portalItem: {
-      id: "b30daca1af104a7896a409f51e714e24" // Your WebMap ID
+      id: "b30daca1af104a7896a409f51e714e24"
     }
   });
 
@@ -65,7 +65,10 @@ define([
   view.when(() => {
     console.log("🗺️ Map and view loaded.");
 
-    reactiveUtils.when(() => view.popup.viewModel.active, async () => {
+    reactiveUtils.watch(() => view.popup.visible, async (visible) => {
+      console.log("👁 Popup visibility changed:", visible);
+      if (!visible) return;
+
       const graphic = view.popup.selectedFeature;
       if (!graphic || !graphic.attributes?.OBJECTID) {
         console.warn("⚠️ No OBJECTID on selected feature.");
