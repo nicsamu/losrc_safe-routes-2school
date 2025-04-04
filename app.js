@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // ✅ Initialize Firebase
+  console.log("✅ DOM loaded. Starting Firebase + ArcGIS setup...");
+
+  // ✅ Firebase config (v8 compatible)
   const firebaseConfig = {
     apiKey: "AIzaSyCC5bxMbUrzFVXI0mVUBXL4STHuNxfWODo",
     authDomain: "school-route-safety-concerns.firebaseapp.com",
@@ -56,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
       container: "viewDiv",
       map: map,
       zoom: 12,
-      center: [-90.0715, 29.9511] // Adjust to your area
+      center: [-90.0715, 29.9511] // Adjust to your location
     });
 
     concernLayer.when(() => {
@@ -99,10 +101,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Record like in Firebase
       await likeDocRef.set({ [`feature_${objectId}`]: true }, { merge: true });
 
-      // Increment like count in ArcGIS
       const currentLikes = selectedFeature.attributes.likes || 0;
       const updatedFeature = {
         attributes: {
