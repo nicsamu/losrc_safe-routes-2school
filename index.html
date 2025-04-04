@@ -6,16 +6,16 @@
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
 
-  <!-- ArcGIS and Firebase v8 -->
-  <script src="https://js.arcgis.com/4.27/"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
 
-  <!-- Firebase config AFTER scripts are loaded -->
-  <script src="firebase-init.js"></script>
+  <!-- ArcGIS -->
+  <script src="https://js.arcgis.com/4.27/" defer></script>
 
-  <!-- Load app logic AFTER Firebase init -->
-  <script src="app.js"></script>
+  <!-- Load Firebase init and app AFTER scripts -->
+  <script defer src="firebase-init.js"></script>
+  <script defer src="app.js"></script>
 
   <style>
     html, body, #viewDiv {
@@ -24,6 +24,7 @@
       height: 100%;
       width: 100%;
     }
+
     #likeBtn {
       position: fixed;
       bottom: 20px;
@@ -40,12 +41,12 @@
       display: none;
       transition: background 0.2s ease;
     }
+
     #likeBtn:hover {
       background: #e3f2fd;
     }
   </style>
 </head>
-
 <body>
   <div id="viewDiv"></div>
   <button id="likeBtn">👍 Like</button>
