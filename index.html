@@ -2,35 +2,39 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Safe Routes Like Button</title>
+  <title>Safe Routes Like Map</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-
-  <!-- ArcGIS JS API -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
-  <script src="https://js.arcgis.com/4.27/"></script>
-
-  <!-- Firebase compat SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
+  <script defer src="https://js.arcgis.com/4.27/"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <style>
     html, body, #viewDiv {
-      padding: 0;
       margin: 0;
+      padding: 0;
       height: 100%;
       width: 100%;
     }
+
     #likeBtn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
       z-index: 10;
-      background-color: white;
-      border: 1px solid #ccc;
-      padding: 6px 12px;
+      padding: 12px 20px;
+      font-size: 18px;
+      background-color: #ffffffcc;
+      border: 2px solid #2196F3;
+      border-radius: 8px;
+      color: #2196F3;
+      font-weight: bold;
       cursor: pointer;
-      font-size: 16px;
       display: none;
+      transition: background 0.2s ease;
+    }
+
+    #likeBtn:hover {
+      background: #e3f2fd;
     }
   </style>
 </head>
@@ -40,94 +44,126 @@
   <button id="likeBtn">👍 Like</button>
 
   <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCC5bxMbUrzFVXI0mVUBXL4STHuNxfWODo",
-      authDomain: "school-route-safety-concerns.firebaseapp.com",
-      projectId: "school-route-safety-concerns",
-      storageBucket: "school-route-safety-concerns.firebasestorage.app",
-      messagingSenderId: "753357994973",
-      appId: "1:753357994973:web:16d04af6a93e84dc465434",
-      measurementId: "G-BE0BNEQ6HD"
-    };
+    document.addEventListener("DOMContentLoaded", function () {
+      const firebaseConfig = {
+        apiKey: "AIzaSyCC5bxMbUrzFVXI0mVUBXL4STHuNxfWODo",
+        authDomain: "school-route-safety-concerns.firebaseapp.com",
+        projectId: "school-route-safety-concerns",
+        storageBucket: "school-route-safety-concerns.appspot.com",
+        messagingSenderId: "753357994973",
+        appId: "1:753357994973:web:16d04af6a93e84dc465434",
+        measurementId: "G-BE0BNEQ6HD"
+      };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
 
-    // Generate or retrieve a unique user ID for localStorage
-    function getUserId() {
-      let uid = localStorage.getItem("srt_user_id");
-      if (!uid) {
-        uid = "user_" + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem("srt_user_id", uid);
-      }
-      return uid;
-    }
-
-    require(["esri/views/MapView", "esri/WebMap", "esri/layers/FeatureLayer"], function(MapView, WebMap, FeatureLayer) {
-      const webmap = new WebMap({
-        portalItem: {
-          id: "b30daca1af104a7896a409f51e714e24"
+      function getUserId() {
+        let uid = localStorage.getItem("srt_user_id");
+        if (!uid) {
+          uid = "user_" + Math.random().toString(36).substring(2, 15);
+          localStorage.setItem("srt_user_id", uid);
         }
-      });
+        return uid;
+      }
 
-      const view = new MapView({
-        container: "viewDiv",
-        map: webmap
-      });
-
-      let selectedFeature = null;
-      const likeBtn = document.getElementById("likeBtn");
-
-      view.when(() => {
-        view.on("click", async (event) => {
-          const response = await view.hitTest(event);
-          const graphic = response.results.find(result => result.graphic?.layer?.type === "feature");
-
-          if (graphic) {
-            selectedFeature = graphic.graphic;
-            likeBtn.style.display = "inline-block";
-          } else {
-            selectedFeature = null;
-            likeBtn.style.display = "none";
+      require(["esri/Map", "esri/views/MapView", "esri/layers/FeatureLayer"], function(Map, MapView, FeatureLayer) {
+        const concernLayer = new FeatureLayer({
+          url: "https://services1.arcgis.com/dUkMSguHjSnNcU9J/arcgis/rest/services/School_Route_Safety_Concerns_(Public_View)/FeatureServer/0",
+          outFields: ["*"],
+          popupTemplate: {
+            title: "Concern Location",
+            content: `
+              <p><strong>Likes:</strong> {likes}</p>
+              <p>Click the 👍 Like button to support this location.</p>
+            `
+          },
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "simple-marker",
+              color: "blue",
+              size: 10,
+              outline: {
+                color: "white",
+                width: 1
+              }
+            }
           }
         });
-      });
 
-      likeBtn.addEventListener("click", async () => {
-        if (!selectedFeature) return;
+        const map = new Map({
+          basemap: "streets-navigation-vector",
+          layers: [concernLayer]
+        });
 
-        const featureId = selectedFeature.attributes.OBJECTID;
-        const userId = getUserId();
-        const likeDoc = db.collection("likes").doc(userId);
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          zoom: 12,
+          center: [-90.0715, 29.9511]
+        });
 
-        const docSnapshot = await likeDoc.get();
-        const liked = docSnapshot.exists ? docSnapshot.data()[`feature_${featureId}`] : false;
+        concernLayer.when(() => {
+          concernLayer.queryExtent().then(function(response) {
+            if (response.extent) {
+              view.goTo(response.extent.expand(1.5));
+            }
+          });
+        });
 
-        if (liked) {
-          alert("You already liked this!");
-          return;
-        }
+        const likeBtn = document.getElementById("likeBtn");
+        let selectedFeature = null;
 
-        // 1. Store the like in Firebase
-        await likeDoc.set({ [`feature_${featureId}`]: true }, { merge: true });
+        view.whenLayerView(concernLayer).then(() => {
+          view.on("click", async (event) => {
+            const response = await view.hitTest(event);
+            const result = response.results.find(r => r.graphic && r.graphic.layer === concernLayer);
 
-        // 2. Update the likes field in ArcGIS
-        const currentLikes = selectedFeature.attributes.likes || 0;
-        const updatedFeature = {
-          attributes: {
-            OBJECTID: featureId,
-            likes: currentLikes + 1
+            if (result) {
+              selectedFeature = result.graphic;
+              likeBtn.style.display = "inline-block";
+            } else {
+              selectedFeature = null;
+              likeBtn.style.display = "none";
+            }
+          });
+        });
+
+        likeBtn.addEventListener("click", async () => {
+          if (!selectedFeature) return;
+
+          const objectId = selectedFeature.attributes.OBJECTID;
+          const userId = getUserId();
+          const likeDocRef = db.collection("likes").doc(userId);
+          const doc = await likeDocRef.get();
+          const alreadyLiked = doc.exists && doc.data()?.[`feature_${objectId}`];
+
+          if (alreadyLiked) {
+            alert("You already liked this.");
+            return;
           }
-        };
 
-        const layer = selectedFeature.layer;
-        layer.applyEdits({ updateFeatures: [updatedFeature] }).then(() => {
-          alert("Thanks for liking!");
-          likeBtn.style.display = "none";
+          await likeDocRef.set({ [`feature_${objectId}`]: true }, { merge: true });
+
+          const currentLikes = selectedFeature.attributes.likes || 0;
+          const updatedFeature = {
+            attributes: {
+              OBJECTID: objectId,
+              likes: currentLikes + 1
+            }
+          };
+
+          concernLayer.applyEdits({ updateFeatures: [updatedFeature] }).then(() => {
+            alert("Thanks for liking!");
+            likeBtn.style.display = "none";
+          }).catch(err => {
+            console.error("Error applying edits:", err);
+          });
         });
       });
     });
   </script>
 </body>
 </html>
+
