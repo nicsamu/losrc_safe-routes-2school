@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Safe Routes Like Button</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+
+  <!-- ArcGIS JS API -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.27/"></script>
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+    #likeBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+  <button id="likeBtn">👍 Like</button>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCC5bxMbUrzFVXI0mVUBXL4STHuNxfWODo",
+      authDomain: "school-route-safety-concerns.firebaseapp.com",
+      projectId: "school-route-safety-concerns",
+      storageBucket: "school-route-safety-concerns.firebasestorage.app",
+      messagingSenderId: "753357994973",
+      appId: "1:753357994973:web:16d04af6a93e84dc465434",
+      measurementId: "G-BE0BNEQ6HD"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Generate or retrieve a unique user ID for localStorage
+    function getUserId() {
+      let uid = localStorage.getItem("srt_user_id");
+      if (!uid) {
+        uid = "user_" + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem("srt_user_id", uid);
+      }
+      return uid;
+    }
+
+    require(["esri/views/MapView", "esri/WebMap", "esri/layers/FeatureLayer"], function(MapView, WebMap, FeatureLayer) {
+      const webmap = new WebMap({
+        portalItem: {
+          id: "b30daca1af104a7896a409f51e714e24"
+        }
+      });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: webmap
+      });
+
+      let selectedFeature = null;
+      const likeBtn = document.getElementById("likeBtn");
+
+      view.when(() => {
+        view.on("click", async (event) => {
+          const response = await view.hitTest(event);
+          const graphic = response.results.find(result => result.graphic?.layer?.type === "feature");
+
+          if (graphic) {
+            selectedFeature = graphic.graphic;
+            likeBtn.style.display = "inline-block";
+          } else {
+            selectedFeature = null;
+            likeBtn.style.display = "none";
+          }
+        });
+      });
+
+      likeBtn.addEventListener("click", async () => {
+        if (!selectedFeature) return;
+
+        const featureId = selectedFeature.attributes.OBJECTID;
+        const userId = getUserId();
+        const likeDoc = db.collection("likes").doc(userId);
+
+        const docSnapshot = await likeDoc.get();
+        const liked = docSnapshot.exists ? docSnapshot.data()[`feature_${featureId}`] : false;
+
+        if (liked) {
+          alert("You already liked this!");
+          return;
+        }
+
+        // 1. Store the like in Firebase
+        await likeDoc.set({ [`feature_${featureId}`]: true }, { merge: true });
+
+        // 2. Update the likes field in ArcGIS
+        const currentLikes = selectedFeature.attributes.likes || 0;
+        const updatedFeature = {
+          attributes: {
+            OBJECTID: featureId,
+            likes: currentLikes + 1
+          }
+        };
+
+        const layer = selectedFeature.layer;
+        layer.applyEdits({ updateFeatures: [updatedFeature] }).then(() => {
+          alert("Thanks for liking!");
+          likeBtn.style.display = "none";
+        });
+      });
+    });
+  </script>
+</body>
+</html>
