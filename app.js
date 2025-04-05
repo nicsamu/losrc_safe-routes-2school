@@ -87,7 +87,9 @@ define([
       });
     });
 
-    reactiveUtils.when(() => view.popup.viewModel, () => {
+    // ✅ Wait for view.popup.viewModel to be ready
+    reactiveUtils.whenOnce(() => !!view.popup?.viewModel).then(() => {
+      console.log("✅ Popup viewModel is ready, attaching trigger-action handler...");
       view.popup.viewModel.on("trigger-action", async (event) => {
         if (event.action.id !== "like-action") return;
 
