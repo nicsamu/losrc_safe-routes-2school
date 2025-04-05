@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log("👁 Popup visibility changed:", visible);
           if (!visible) return;
 
-          const graphic = view.popup.selectedFeature;
+          const graphic = view.popup.selectedFeature || view.popup.features?.[0];
 
           console.log("🔎 Selected feature:", graphic);
           console.log("📄 Attributes available:", graphic?.attributes);
