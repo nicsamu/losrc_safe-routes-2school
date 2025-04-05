@@ -78,6 +78,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
           console.log("🔎 Selected feature:", graphic);
           console.log("📄 Attributes available:", graphic?.attributes);
+          console.log("🔑 Available attribute keys:", Object.keys(graphic?.attributes || {}));
+
 
           if (!graphic || !graphic.attributes?.objectid) {
             console.warn("⚠️ No objectid on selected feature.");
