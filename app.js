@@ -66,6 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     view.when(() => {
       console.log("🗺️ Map and view loaded.");
+      window.view = view; // 👈 expose for debugging
 
       webmap.layers.forEach((layer, i) => {
         console.log(`📦 Layer ${i}: ${layer.title}`, layer);
