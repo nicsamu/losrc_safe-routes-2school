@@ -75,17 +75,24 @@ document.addEventListener("DOMContentLoaded", function () {
       reactiveUtils.when(() => view.popup.viewModel, () => {
         console.log("🔁 Popup viewModel ready");
 
-        reactiveUtils.watch(() => view.popup.visible, async (visible) => {
+                reactiveUtils.watch(() => view.popup.visible, async (visible) => {
           console.log("👁 Popup visibility changed:", visible);
           if (!visible) return;
 
-          const graphic = view.popup.features?.[0];
+          // Wait until the popup's features are populated
+          let graphic;
+          for (let i = 0; i < 10; i++) {
+            graphic = view.popup.features?.[0];
+            if (graphic?.attributes?.objectid) break;
+            await new Promise(res => setTimeout(res, 200));
+          }
+
           console.log("🔎 Selected feature:", graphic);
           console.log("📄 Attributes available:", graphic?.attributes);
           console.log("🔑 Available attribute keys:", Object.keys(graphic?.attributes || {}));
 
           if (!graphic?.attributes?.objectid) {
-            console.warn("⚠️ No objectid on selected feature.");
+            console.warn("⚠️ No objectid on selected feature even after wait.");
             return;
           }
 
