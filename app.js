@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
             view.popup.actions.add({
               title: `${count} Likes`,
               id: "like-action",
-              className: "esri-icon-thumbs-up"
+              image: "https://js.arcgis.com/4.27/esri/themes/base/icons/thumb-up.svg"
             });
           }
         );
