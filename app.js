@@ -67,6 +67,11 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Map and view loaded.");
 
+      // 🔍 Log all layers in the web map
+      webmap.layers.forEach((layer, i) => {
+        console.log(`📦 Layer ${i}: ${layer.title}`, layer);
+      });
+
       reactiveUtils.when(() => view.popup.viewModel, () => {
         console.log("🔁 Popup viewModel ready");
 
