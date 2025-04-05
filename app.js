@@ -3,7 +3,7 @@ define([
   "esri/views/MapView",
   "esri/core/reactiveUtils"
 ], function (WebMap, MapView, reactiveUtils) {
-  console.log("✅ DOM ready. Starting map setup... (v3)");
+  console.log("✅ DOM ready. Starting map setup... (v4)");
 
   const webmap = new WebMap({
     portalItem: {
@@ -87,7 +87,6 @@ define([
       });
     });
 
-    // ✅ Wait until popup viewModel exists before attaching action trigger
     reactiveUtils.when(() => view.popup.viewModel, () => {
       view.popup.viewModel.on("trigger-action", async (event) => {
         if (event.action.id !== "like-action") return;
