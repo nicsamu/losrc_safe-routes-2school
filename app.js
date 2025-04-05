@@ -75,6 +75,10 @@ document.addEventListener("DOMContentLoaded", function () {
           if (!visible) return;
 
           const graphic = view.popup.selectedFeature;
+
+          console.log("🔎 Selected feature:", graphic);
+          console.log("📄 Attributes available:", graphic?.attributes);
+
           if (!graphic || !graphic.attributes?.objectid) {
             console.warn("⚠️ No objectid on selected feature.");
             return;
