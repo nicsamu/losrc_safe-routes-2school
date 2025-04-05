@@ -16,21 +16,12 @@
       width: 100%;
     }
 
-    .esri-popup__footer .esri-popup__action-image {
-      filter: invert(27%) sepia(19%) saturate(547%) hue-rotate(135deg) brightness(95%) contrast(87%);
-    }
-
-    .esri-popup__footer .esri-popup__action-image:hover {
-      transform: scale(1.1);
-      transition: transform 0.2s ease;
-    }
-
-    /* Color the thumbs-up icon 
-    .esri-icon-thumbs-up::before {
+    /* Like icon color (active state) */
+    .esri-icon-thumbs-up.liked::before {
       color: #30737b !important;
-    }*/
+    }
 
-    /* Animation burst */
+    /* Like burst animation */
     .like-burst {
       position: absolute;
       font-size: 24px;
@@ -42,14 +33,14 @@
       opacity: 1;
       transition: all 0.7s ease-out;
       pointer-events: none;
-      z-index: 1000;
+      z-index: 9999;
     }
   </style>
 </head>
 <body>
   <div id="viewDiv"></div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDKs (compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
   <script>
@@ -62,6 +53,7 @@
       appId: "1:753357994973:web:16d04af6a93e84dc465434",
       measurementId: "G-BE0BNEQ6HD"
     };
+
     firebase.initializeApp(firebaseConfig);
     window.db = firebase.firestore();
   </script>
@@ -69,7 +61,7 @@
   <!-- ArcGIS JS API -->
   <script src="https://js.arcgis.com/4.27/"></script>
 
-  <!-- Your app logic -->
+  <!-- App logic -->
   <script src="app.js"></script>
 </body>
 </html>
