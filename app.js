@@ -87,19 +87,22 @@ define([
       });
     });
 
-    view.popup.viewModel.on("trigger-action", async (event) => {
-      if (event.action.id !== "like-action") return;
+    // ✅ Wait until popup viewModel exists before attaching action trigger
+    reactiveUtils.when(() => view.popup.viewModel, () => {
+      view.popup.viewModel.on("trigger-action", async (event) => {
+        if (event.action.id !== "like-action") return;
 
-      const graphic = view.popup.selectedFeature;
-      if (!graphic?.attributes?.OBJECTID) return;
+        const graphic = view.popup.selectedFeature;
+        if (!graphic?.attributes?.OBJECTID) return;
 
-      const objectId = graphic.attributes.OBJECTID.toString();
-      const updatedCount = await incrementLike(objectId);
-      if (updatedCount !== null) {
-        const likeAction = view.popup.actions.find(a => a.id === "like-action");
-        if (likeAction) likeAction.title = `${updatedCount} Likes`;
-        showLikeBurst();
-      }
+        const objectId = graphic.attributes.OBJECTID.toString();
+        const updatedCount = await incrementLike(objectId);
+        if (updatedCount !== null) {
+          const likeAction = view.popup.actions.find(a => a.id === "like-action");
+          if (likeAction) likeAction.title = `${updatedCount} Likes`;
+          showLikeBurst();
+        }
+      });
     });
   });
 });
