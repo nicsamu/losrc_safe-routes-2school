@@ -38,28 +38,28 @@ define([
     setTimeout(() => burst.remove(), 1000);
   }
 
-  async function getLikeCount(objectId) {
+  async function getLikeCount(objectid) {
     const doc = await summaryRef.get();
-    return doc.exists && doc.data()[objectId] ? doc.data()[objectId] : 0;
+    return doc.exists && doc.data()[objectid] ? doc.data()[objectid] : 0;
   }
 
-  async function incrementLike(objectId) {
+  async function incrementLike(objectid) {
     const userId = getUserId();
     const userRef = db.collection("likes_users").doc(userId);
     const userDoc = await userRef.get();
-    const alreadyLiked = userDoc.exists && userDoc.data()?.[objectId];
+    const alreadyLiked = userDoc.exists && userDoc.data()?.[objectid];
 
     if (alreadyLiked) {
       alert("You've already liked this.");
       return null;
     }
 
-    await userRef.set({ [objectId]: true }, { merge: true });
+    await userRef.set({ [objectid]: true }, { merge: true });
     await summaryRef.set({
-      [objectId]: firebase.firestore.FieldValue.increment(1)
+      [objectid]: firebase.firestore.FieldValue.increment(1)
     }, { merge: true });
 
-    return await getLikeCount(objectId);
+    return await getLikeCount(objectid);
   }
 
   view.when(() => {
@@ -70,14 +70,14 @@ define([
       if (!visible) return;
 
       const graphic = view.popup.selectedFeature;
-      if (!graphic || !graphic.attributes?.OBJECTID) {
-        console.warn("⚠️ No OBJECTID on selected feature.");
+      if (!graphic || !graphic.attributes?.objectid) {
+        console.warn("⚠️ No objectid on selected feature.");
         return;
       }
 
-      const objectId = graphic.attributes.OBJECTID.toString();
-      const count = await getLikeCount(objectId);
-      console.log(`👍 Likes for OBJECTID ${objectId}:`, count);
+      const objectid = graphic.attributes.objectid.toString();
+      const count = await getLikeCount(objectid);
+      console.log(`👍 Likes for objectid ${objectid}:`, count);
 
       view.popup.actions.removeAll();
       view.popup.actions.add({
@@ -94,10 +94,10 @@ define([
         if (event.action.id !== "like-action") return;
 
         const graphic = view.popup.selectedFeature;
-        if (!graphic?.attributes?.OBJECTID) return;
+        if (!graphic?.attributes?.objectid) return;
 
-        const objectId = graphic.attributes.OBJECTID.toString();
-        const updatedCount = await incrementLike(objectId);
+        const objectid = graphic.attributes.objectid.toString();
+        const updatedCount = await incrementLike(objectid);
         if (updatedCount !== null) {
           const likeAction = view.popup.actions.find(a => a.id === "like-action");
           if (likeAction) likeAction.title = `${updatedCount} Likes`;
