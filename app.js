@@ -72,41 +72,35 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(`📦 Layer ${i}: ${layer.title}`, layer);
       });
 
-      reactiveUtils.when(() => view.popup.viewModel, () => {
-        console.log("🔁 Popup viewModel ready");
+              reactiveUtils.watch(
+          () => view.popup.viewModel.active,
+          async (isActive) => {
+            if (!isActive) return;
+            console.log("👁 Popup became active");
 
-                reactiveUtils.watch(() => view.popup.visible, async (visible) => {
-          console.log("👁 Popup visibility changed:", visible);
-          if (!visible) return;
+            await reactiveUtils.whenOnce(() => view.popup.features?.length > 0);
+            const graphic = view.popup.features[0];
+            console.log("🔎 Selected feature:", graphic);
+            console.log("📄 Attributes available:", graphic?.attributes);
+            console.log("🔑 Available attribute keys:", Object.keys(graphic?.attributes || {}));
 
-          // Wait until the popup's features are populated
-          let graphic;
-          for (let i = 0; i < 10; i++) {
-            graphic = view.popup.features?.[0];
-            if (graphic?.attributes?.objectid) break;
-            await new Promise(res => setTimeout(res, 200));
+            if (!graphic?.attributes?.objectid) {
+              console.warn("⚠️ No objectid on selected feature.");
+              return;
+            }
+
+            const objectId = graphic.attributes.objectid.toString();
+            const count = await getLikeCount(objectId);
+            console.log(`👍 Likes for objectid ${objectId}:`, count);
+
+            view.popup.actions.removeAll();
+            view.popup.actions.add({
+              title: `${count} Likes`,
+              id: "like-action",
+              className: "esri-icon-thumbs-up"
+            });
           }
-
-          console.log("🔎 Selected feature:", graphic);
-          console.log("📄 Attributes available:", graphic?.attributes);
-          console.log("🔑 Available attribute keys:", Object.keys(graphic?.attributes || {}));
-
-          if (!graphic?.attributes?.objectid) {
-            console.warn("⚠️ No objectid on selected feature even after wait.");
-            return;
-          }
-
-          const objectId = graphic.attributes.objectid.toString();
-          const count = await getLikeCount(objectId);
-          console.log(`👍 Likes for objectid ${objectId}:`, count);
-
-          view.popup.actions.removeAll();
-          view.popup.actions.add({
-            title: `${count} Likes`,
-            id: "like-action",
-            className: "esri-icon-thumbs-up"
-          });
-        });
+        );
 
         reactiveUtils.on(() => view.popup.viewModel, "trigger-action", async (event) => {
           if (event.action.id !== "like-action") return;
