@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("✅ DOM ready. Starting map setup... (v4)");
+  console.log("✅ DOM ready. Starting map setup... (v5)");
 
   require([
     "esri/WebMap",
@@ -67,7 +67,6 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Map and view loaded.");
 
-      // 🔍 Log all layers in the web map
       webmap.layers.forEach((layer, i) => {
         console.log(`📦 Layer ${i}: ${layer.title}`, layer);
       });
@@ -79,14 +78,12 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log("👁 Popup visibility changed:", visible);
           if (!visible) return;
 
-          const graphic = view.popup.selectedFeature || view.popup.features?.[0];
-
+          const graphic = view.popup.features?.[0];
           console.log("🔎 Selected feature:", graphic);
           console.log("📄 Attributes available:", graphic?.attributes);
           console.log("🔑 Available attribute keys:", Object.keys(graphic?.attributes || {}));
 
-
-          if (!graphic || !graphic.attributes?.objectid) {
+          if (!graphic?.attributes?.objectid) {
             console.warn("⚠️ No objectid on selected feature.");
             return;
           }
@@ -103,10 +100,10 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         });
 
-        view.popup.viewModel.on("trigger-action", async (event) => {
+        reactiveUtils.on(() => view.popup.viewModel, "trigger-action", async (event) => {
           if (event.action.id !== "like-action") return;
 
-          const graphic = view.popup.selectedFeature;
+          const graphic = view.popup.features?.[0];
           if (!graphic?.attributes?.objectid) return;
 
           const objectId = graphic.attributes.objectid.toString();
