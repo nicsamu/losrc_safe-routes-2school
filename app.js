@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
     view.when(() => {
       console.log("🗺️ Map and view loaded.");
       window.view = view;
+      console.log("🌍 'view' is now globally available");
 
       reactiveUtils.when(() => view.popup.viewModel, () => {
         reactiveUtils.watch(() => view.popup.visible, async (visible) => {
