@@ -13,18 +13,22 @@
       width: 100%;
     }
 
+    /* Hide popup button label (just show the icon + count) */
     .esri-popup__action-text {
       display: none;
     }
 
+    /* Style the thumbs up icon */
     .esri-popup__action-button .esri-icon-thumbs-up::before {
       color: #30737b;
     }
 
-    .liked .esri-icon-thumbs-up::before {
+    /* Highlight when liked */
+    .esri-popup__action-button.liked .esri-icon-thumbs-up::before {
       font-weight: bold;
     }
 
+    /* Animated +1 burst */
     .like-burst {
       position: absolute;
       font-size: 24px;
