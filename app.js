@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const db = window.db;
     const summaryRef = db.collection("likes_summary").doc("counts");
+    const userId = getUserId();
 
     function getUserId() {
       let uid = localStorage.getItem("srt_user_id");
@@ -40,33 +41,31 @@ document.addEventListener("DOMContentLoaded", function () {
       setTimeout(() => burst.remove(), 1000);
     }
 
-    async function getLikeCount(objectId) {
-      const doc = await summaryRef.get();
-      return doc.exists && doc.data()[objectId] ? doc.data()[objectId] : 0;
-    }
-
-    async function hasLiked(objectId) {
-      const userId = getUserId();
-      const userRef = db.collection("likes_users").doc(userId);
-      const userDoc = await userRef.get();
-      return userDoc.exists && !!userDoc.data()?.[objectId];
+    async function getLikeData(objectId) {
+      const [summaryDoc, userDoc] = await Promise.all([
+        summaryRef.get(),
+        db.collection("likes_users").doc(userId).get()
+      ]);
+      const count = summaryDoc.exists && summaryDoc.data()?.[objectId] || 0;
+      const liked = userDoc.exists && userDoc.data()?.[objectId] || false;
+      return { count, liked };
     }
 
     async function toggleLike(objectId) {
-      const userId = getUserId();
       const userRef = db.collection("likes_users").doc(userId);
       const userDoc = await userRef.get();
-      const alreadyLiked = userDoc.exists && userDoc.data()?.[objectId];
+      const liked = userDoc.exists && userDoc.data()?.[objectId];
 
-      if (alreadyLiked) {
-        await userRef.set({ [objectId]: firebase.firestore.FieldValue.delete() }, { merge: true });
-        await summaryRef.set({ [objectId]: firebase.firestore.FieldValue.increment(-1) }, { merge: true });
-        return { count: await getLikeCount(objectId), liked: false };
-      } else {
-        await userRef.set({ [objectId]: true }, { merge: true });
-        await summaryRef.set({ [objectId]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-        return { count: await getLikeCount(objectId), liked: true };
-      }
+      const updates = {};
+      updates[objectId] = liked ? firebase.firestore.FieldValue.delete() : true;
+
+      await userRef.set(updates, { merge: true });
+
+      await summaryRef.set({
+        [objectId]: firebase.firestore.FieldValue.increment(liked ? -1 : 1)
+      }, { merge: true });
+
+      return await getLikeData(objectId);
     }
 
     view.when(() => {
@@ -80,50 +79,50 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log("👁 Popup visibility changed:", visible);
           if (!visible) return;
 
-          const graphic = view.popup.features?.[0];
-          if (!graphic?.attributes?.objectid) {
+          const feature = view.popup?.features?.[0];
+          if (!feature?.attributes?.objectid) {
             console.warn("⚠️ No valid objectid on feature.");
             return;
           }
 
-          const objectId = graphic.attributes.objectid.toString();
-          const count = await getLikeCount(objectId);
-          const liked = await hasLiked(objectId);
+          const objectId = feature.attributes.objectid.toString();
+          const { count, liked } = await getLikeData(objectId);
 
-          const icon = liked ? "esri-icon-thumbs-up" : "esri-icon-thumbs-up";
-          const colorClass = liked ? "liked" : "";
+          const likeAction = {
+            title: `${count}`,
+            id: "like-toggle",
+            className: "esri-icon-thumbs-up"
+          };
 
           view.popup.actions.removeAll();
-          view.popup.actions.add({
-            title: `${count}`,
-            id: "like-action",
-            className: `${icon} ${colorClass}`
-          });
+          view.popup.actions.add(likeAction);
+
+          // Apply highlight class if already liked
+          const node = document.querySelector(".esri-popup__action-button .esri-icon-thumbs-up");
+          if (node && liked) {
+            node.parentNode.classList.add("liked");
+          }
         });
 
-        reactiveUtils.on(
-          () => view.popup.viewModel,
-          "trigger-action",
-          async (event) => {
-            if (event.action.id !== "like-action") return;
+        reactiveUtils.on(() => view.popup.viewModel, "trigger-action", async (event) => {
+          if (event.action.id !== "like-toggle") return;
 
-            const graphic = view.popup.features?.[0];
-            if (!graphic?.attributes?.objectid) return;
+          const feature = view.popup?.features?.[0];
+          if (!feature?.attributes?.objectid) return;
 
-            const objectId = graphic.attributes.objectid.toString();
-            const result = await toggleLike(objectId);
+          const objectId = feature.attributes.objectid.toString();
+          const { count, liked } = await toggleLike(objectId);
 
-            const action = view.popup.actions.find((a) => a.id === "like-action");
-            if (action) {
-              action.title = `${result.count}`;
-              action.className = result.liked
-                ? "esri-icon-thumbs-up liked"
-                : "esri-icon-thumbs-up";
-            }
+          const action = view.popup.actions.find(a => a.id === "like-toggle");
+          if (action) action.title = `${count}`;
 
-            if (result.liked) showLikeBurst();
+          const node = document.querySelector(".esri-popup__action-button .esri-icon-thumbs-up");
+          if (node?.parentNode) {
+            node.parentNode.classList.toggle("liked", liked);
           }
-        );
+
+          if (liked) showLikeBurst();
+        });
       });
     });
   });
