@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Safe Routes Likes</title>
-
-  <!-- ArcGIS CSS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
-
   <style>
     html, body, #viewDiv {
       margin: 0;
@@ -16,12 +13,10 @@
       width: 100%;
     }
 
-    /* Like icon color (active state) */
-    .esri-icon-thumbs-up.liked::before {
+    .esri-icon-thumbs-up::before {
       color: #30737b !important;
     }
 
-    /* Like burst animation */
     .like-burst {
       position: absolute;
       font-size: 24px;
@@ -33,14 +28,13 @@
       opacity: 1;
       transition: all 0.7s ease-out;
       pointer-events: none;
-      z-index: 9999;
     }
   </style>
 </head>
 <body>
   <div id="viewDiv"></div>
 
-  <!-- Firebase SDKs (compat) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
   <script>
@@ -53,7 +47,6 @@
       appId: "1:753357994973:web:16d04af6a93e84dc465434",
       measurementId: "G-BE0BNEQ6HD"
     };
-
     firebase.initializeApp(firebaseConfig);
     window.db = firebase.firestore();
   </script>
