@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("✅ DOM ready. Starting map setup... (v6)");
+  console.log("✅ DOM ready. Starting map setup...");
 
   require([
     "esri/WebMap",
@@ -40,46 +40,40 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function getLikeCount(objectId) {
       const doc = await summaryRef.get();
-      return doc.exists && doc.data()?.[objectId] ? doc.data()[objectId] : 0;
+      return doc.exists && doc.data()[objectId] ? doc.data()[objectId] : 0;
     }
 
     async function hasUserLiked(objectId) {
       const userId = getUserId();
       const userDoc = await db.collection("likes_users").doc(userId).get();
-      return userDoc.exists && userDoc.data()?.[objectId] === true;
+      return userDoc.exists && !!userDoc.data()?.[objectId];
     }
 
     async function toggleLike(objectId) {
       const userId = getUserId();
       const userRef = db.collection("likes_users").doc(userId);
+      const summaryUpdate = {};
       const userDoc = await userRef.get();
-      const alreadyLiked = userDoc.exists && userDoc.data()?.[objectId] === true;
+      const userData = userDoc.data() || {};
+      const liked = !!userData[objectId];
 
-      const updates = {};
-      let increment = 0;
-
-      if (alreadyLiked) {
-        updates[objectId] = firebase.firestore.FieldValue.delete();
-        increment = -1;
+      if (liked) {
+        delete userData[objectId];
+        summaryUpdate[objectId] = firebase.firestore.FieldValue.increment(-1);
       } else {
-        updates[objectId] = true;
-        increment = 1;
+        userData[objectId] = true;
+        summaryUpdate[objectId] = firebase.firestore.FieldValue.increment(1);
+        showLikeBurst();
       }
 
-      await userRef.set(updates, { merge: true });
-      await summaryRef.set({
-        [objectId]: firebase.firestore.FieldValue.increment(increment)
-      }, { merge: true });
+      await userRef.set(userData);
+      await summaryRef.set(summaryUpdate, { merge: true });
 
-      return {
-        liked: !alreadyLiked,
-        count: await getLikeCount(objectId)
-      };
+      return await getLikeCount(objectId);
     }
 
     view.when(() => {
       console.log("🗺️ Map and view loaded.");
-      window.view = view; // for debugging
 
       reactiveUtils.when(() => view.popup.viewModel, () => {
         console.log("🔁 Popup viewModel ready");
@@ -88,7 +82,10 @@ document.addEventListener("DOMContentLoaded", function () {
           if (!visible) return;
 
           const graphic = view.popup?.features?.[0];
-          if (!graphic?.attributes?.objectid) return;
+          if (!graphic?.attributes?.objectid) {
+            console.warn("⚠️ No objectid on selected feature.");
+            return;
+          }
 
           const objectId = graphic.attributes.objectid.toString();
           const [count, liked] = await Promise.all([
@@ -96,17 +93,12 @@ document.addEventListener("DOMContentLoaded", function () {
             hasUserLiked(objectId)
           ]);
 
-          const likeIcon = liked ? "esri-icon-thumbs-up" : "esri-icon-thumbs-up";
-          const classList = liked ? "liked" : "";
-
           view.popup.actions.removeAll();
           view.popup.actions.add({
+            title: `${count}`,
             id: "like-action",
-            className: `${likeIcon} ${classList}`,
-            title: "" // hide label
+            className: liked ? "esri-icon-thumbs-up toggle-on" : "esri-icon-thumbs-up toggle-off"
           });
-
-          view.popup.title += ` (${count} Likes)`;
         });
 
         reactiveUtils.on(() => view.popup.viewModel, "trigger-action", async (event) => {
@@ -116,19 +108,14 @@ document.addEventListener("DOMContentLoaded", function () {
           if (!graphic?.attributes?.objectid) return;
 
           const objectId = graphic.attributes.objectid.toString();
-          const { liked, count } = await toggleLike(objectId);
+          const updatedCount = await toggleLike(objectId);
 
-          const action = view.popup.actions.find(a => a.id === "like-action");
-          if (action) {
-            action.className = liked ? "esri-icon-thumbs-up liked" : "esri-icon-thumbs-up";
-            action.title = ""; // hide label
+          const likeAction = view.popup.actions.find(a => a.id === "like-action");
+          if (likeAction) {
+            likeAction.title = `${updatedCount}`;
+            const liked = await hasUserLiked(objectId);
+            likeAction.className = liked ? "esri-icon-thumbs-up toggle-on" : "esri-icon-thumbs-up toggle-off";
           }
-
-          // Live update title with count
-          const originalTitle = graphic.layer?.popupTemplate?.title || "Feature";
-          view.popup.title = `${originalTitle} (${count} Likes)`;
-
-          if (liked) showLikeBurst();
         });
       });
     });
