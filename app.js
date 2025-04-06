@@ -58,29 +58,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 🧪 Listen for popup visibility changes directly
       reactiveUtils.watch(() => view.popup.visible, async (visible) => {
-        console.log("👁 Popup visibility changed:", visible);
-        if (!visible) return;
+  console.log("👁 Popup visibility changed:", visible);
+  if (!visible) return;
 
-        const graphic = view.popup.features?.[0];
-        console.log("🔎 Selected feature:", graphic);
-        console.log("📄 Attributes:", graphic?.attributes);
+  // Wait briefly to allow popup to populate selected feature
+  setTimeout(async () => {
+    const graphic = view.popup?.features?.[0];
+    console.log("🔎 Selected feature:", graphic);
+    console.log("📄 Attributes:", graphic?.attributes);
 
-        const objectId = graphic?.attributes?.objectid;
-        if (!objectId) {
-          console.warn("⚠️ No valid objectid on feature.");
-          return;
-        }
+    const objectId = graphic?.attributes?.objectid;
+    if (!objectId) {
+      console.warn("⚠️ No valid objectid on feature.");
+      return;
+    }
 
-        const count = await getLikeCount(objectId.toString());
-        console.log(`👍 Like count for objectid ${objectId}: ${count}`);
+    const count = await getLikeCount(objectId.toString());
+    console.log(`👍 Like count for objectid ${objectId}: ${count}`);
 
-        view.popup.actions.removeAll();
-        view.popup.actions.add({
-          title: `${count} Likes`,
-          id: "like-action",
-          className: "esri-icon-thumbs-up"
-        });
-      });
+    view.popup.actions.removeAll();
+    view.popup.actions.add({
+      title: `${count} Likes`,
+      id: "like-action",
+      className: "esri-icon-thumbs-up"
+    });
+  }, 300); // Delay allows feature to populate
+});
 
       // 🧪 Listen for button clicks
       view.popup.on("trigger-action", async (event) => {
