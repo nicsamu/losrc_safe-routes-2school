@@ -69,6 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     view.when(() => {
       console.log("🗺️ Map and view loaded.");
+      window.view = view;
 
       reactiveUtils.when(() => view.popup.viewModel, () => {
         reactiveUtils.watch(() => view.popup.visible, async (visible) => {
