@@ -12,8 +12,14 @@
       height: 100%;
       width: 100%;
     }
-    .esri-icon-thumbs-up::before {
-      color: #30737b !important;
+    .esri-popup__action-text {
+      display: none;
+    }
+    .esri-popup__action-button .esri-icon-thumbs-up::before {
+      color: #30737b;
+    }
+    .liked .esri-icon-thumbs-up::before {
+      font-weight: bold;
     }
     .like-burst {
       position: absolute;
