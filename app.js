@@ -56,49 +56,55 @@ document.addEventListener("DOMContentLoaded", function () {
       window.view = view;
       console.log("🌍 'view' is now globally available");
 
-      // 🧪 Listen for popup visibility changes directly
-      reactiveUtils.watch(() => view.popup.visible, async (visible) => {
-  console.log("👁 Popup visibility changed:", visible);
-  if (!visible) return;
-
-  // Wait briefly to allow popup to populate selected feature
-  setTimeout(async () => {
-    const graphic = view.popup?.features?.[0];
-    console.log("🔎 Selected feature:", graphic);
-    console.log("📄 Attributes:", graphic?.attributes);
-
-    const objectId = graphic?.attributes?.objectid;
-    if (!objectId) {
-      console.warn("⚠️ No valid objectid on feature.");
-      return;
-    }
-
-    const count = await getLikeCount(objectId.toString());
-    console.log(`👍 Like count for objectid ${objectId}: ${count}`);
-
-    view.popup.actions.removeAll();
-    view.popup.actions.add({
-      title: `${count} Likes`,
-      id: "like-action",
-      className: "esri-icon-thumbs-up"
+    // 🧪 Listen for popup visibility changes directly
+    reactiveUtils.watch(() => view.popup.visible, (visible) => {
+      console.log("👁 Popup visibility changed:", visible);
+      if (!visible) return;
+    
+      setTimeout(async () => {
+        const features = view.popup?.features;
+        if (!features || features.length === 0) {
+          console.warn("⚠️ Popup features not yet loaded or empty.");
+          return;
+        }
+    
+        const graphic = features[0];
+        console.log("🔎 Selected feature:", graphic);
+        console.log("📄 Attributes:", graphic?.attributes);
+    
+        const objectId = graphic?.attributes?.objectid;
+        if (!objectId) {
+          console.warn("⚠️ No valid objectid on feature.");
+          return;
+        }
+    
+        const count = await getLikeCount(objectId.toString());
+        console.log(`👍 Like count for objectid ${objectId}: ${count}`);
+    
+        view.popup.actions.removeAll();
+        view.popup.actions.add({
+          title: `${count} Likes`,
+          id: "like-action",
+          className: "esri-icon-thumbs-up"
+        });
+      }, 600); // Slightly longer delay
     });
-  }, 300); // Delay allows feature to populate
-});
+
 
       // 🧪 Listen for button clicks
-      view.popup.on("trigger-action", async (event) => {
+      view.popup.viewModel.on("trigger-action", async (event) => {
         console.log("🎯 Trigger action:", event.action.id);
-
         if (event.action.id !== "like-action") return;
-
+      
         const graphic = view.popup.features?.[0];
         const objectId = graphic?.attributes?.objectid;
         if (!objectId) return;
-
+      
         const updatedCount = await incrementLike(objectId.toString());
         if (updatedCount !== null) {
           const likeAction = view.popup.actions.find(a => a.id === "like-action");
           if (likeAction) likeAction.title = `${updatedCount} Likes`;
+          showLikeBurst();
         }
       });
     });
