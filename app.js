@@ -118,7 +118,8 @@ document.addEventListener("DOMContentLoaded", function () {
           const likeAction = view.popup.actions.find(a => a.id === "like-action");
           if (likeAction) {
             likeAction.title = `${updatedCount}`;
-            likeAction.className = "esri-icon-thumbs-up";
+            const likedNow = await hasUserLiked(objectId);
+            likeAction.className = `esri-icon-thumbs-up ${likedNow ? "liked" : ""}`;
           }
         });
       });
