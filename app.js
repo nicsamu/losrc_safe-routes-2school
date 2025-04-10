@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log("👁 Popup visibility changed:", visible);
           if (!visible) return;
 
-          const feature = view.popup?.features?.[0];
+          const feature = view.popup?.features?.[0] ?? view.popup?.selectedFeature;
           if (!feature) {
             console.warn("⚠️ No feature selected.");
             return;
