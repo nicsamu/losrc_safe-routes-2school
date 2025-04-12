@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function getLikeCount(objectId) {
       const doc = await summaryRef.get();
-      return doc.exists && doc.data()[objectId] ? doc.data()[objectId] : 0;
+      return doc.exists && doc.data()?.[objectId] ? doc.data()[objectId] : 0;
     }
 
     async function hasUserLiked(objectId) {
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
           view.popup.actions.add({
             title: `${count}`,
             id: "like-action",
-            className: `esri-icon-thumbs-up ${liked ? "liked" : ""}`
+            className: liked ? "esri-icon-thumbs-up liked" : "esri-icon-thumbs-up"
           });
         });
 
@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const likeAction = view.popup.actions.find(a => a.id === "like-action");
           if (likeAction) {
             likeAction.title = `${updatedCount}`;
-            likeAction.className = `esri-icon-thumbs-up ${likedNow ? "liked" : ""}`;
+            likeAction.className = likedNow ? "esri-icon-thumbs-up liked" : "esri-icon-thumbs-up";
           }
         });
       });
