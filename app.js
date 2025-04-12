@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
     "esri/views/MapView",
     "esri/core/reactiveUtils"
   ], function (WebMap, MapView, reactiveUtils) {
-
     const webmap = new WebMap({
       portalItem: {
         id: "b30daca1af104a7896a409f51e714e24"
@@ -76,51 +75,46 @@ document.addEventListener("DOMContentLoaded", function () {
       reactiveUtils.when(() => view.popup.viewModel, () => {
         console.log("🔁 Popup viewModel ready");
 
-        reactiveUtils.watch(
-          () => view.popup.features,
-          async (features) => {
-            if (!features || !features.length) return;
-        
-            const feature = features[0];
-            if (!feature?.attributes) {
-              console.warn("⚠️ No attributes found.");
-              return;
-            }
-        
-            const objectId = feature.attributes.objectid?.toString();
-            if (!objectId) {
-              console.warn("⚠️ No objectid found.");
-              return;
-            }
-        
-            const count = await getLikeCount(objectId);
-            const liked = await hasUserLiked(objectId);
-        
-            console.log(`👍 Like count for objectid ${objectId}: ${count}, liked: ${liked}`);
-        
-            view.popup.actions.removeAll();
-            view.popup.actions.add({
-              title: `${count}`,
-              id: "like-action",
-              className: `esri-icon-thumbs-up ${liked ? "liked" : ""}`
-            });
-          },
-          { initial: true }
-        );
-        reactiveUtils.on(() => view.popup.viewModel, "trigger-action", async (event) => {
+        reactiveUtils.watch(() => view.popup.viewModel.selectedFeature, async (feature) => {
+          console.log("🔍 Selected feature changed:", feature);
+          if (!feature?.attributes) {
+            console.warn("⚠️ No feature selected or no attributes.");
+            return;
+          }
+
+          const objectId = feature.attributes.objectid?.toString();
+          if (!objectId) {
+            console.warn("⚠️ No objectid on feature.");
+            return;
+          }
+
+          const count = await getLikeCount(objectId);
+          const liked = await hasUserLiked(objectId);
+
+          console.log(`👍 Like count for objectid ${objectId}: ${count}, liked: ${liked}`);
+
+          view.popup.actions.removeAll();
+          view.popup.actions.add({
+            title: `${count}`,
+            id: "like-action",
+            className: `esri-icon-thumbs-up ${liked ? "liked" : ""}`
+          });
+        });
+
+        view.popup.viewModel.on("trigger-action", async (event) => {
           if (event.action.id !== "like-action") return;
 
-          const feature = view.popup.selectedFeature ?? view.popup.features?.[0];
-          const objectId = feature?.attributes?.objectid?.toString();
-          if (!objectId) return;
+          const feature = view.popup.viewModel.selectedFeature;
+          if (!feature?.attributes?.objectid) return;
 
+          const objectId = feature.attributes.objectid.toString();
           const updatedCount = await toggleLike(objectId);
           const likedNow = await hasUserLiked(objectId);
 
-          const action = view.popup.actions.find(a => a.id === "like-action");
-          if (action) {
-            action.title = `${updatedCount}`;
-            action.className = `esri-icon-thumbs-up ${likedNow ? "liked" : ""}`;
+          const likeAction = view.popup.actions.find(a => a.id === "like-action");
+          if (likeAction) {
+            likeAction.title = `${updatedCount}`;
+            likeAction.className = `esri-icon-thumbs-up ${likedNow ? "liked" : ""}`;
           }
         });
       });
