@@ -80,18 +80,13 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log("👁 Popup visibility changed:", visible);
           if (!visible) return;
 
-          const feature = view.popup?.features?.[0] ?? view.popup?.selectedFeature;
-          if (!feature) {
-            console.warn("⚠️ No feature selected.");
-            return;
-          }
-
-          const objectId = feature.getAttribute?.("objectid")?.toString();
-          if (!objectId) {
+          const feature = view.popup?.features?.[0];
+          if (!feature || !feature.attributes?.objectid) {
             console.warn("⚠️ No valid objectid on feature.");
             return;
           }
 
+          const objectId = feature.attributes.objectid.toString();
           const count = await getLikeCount(objectId);
           const liked = await hasUserLiked(objectId);
 
@@ -101,26 +96,39 @@ document.addEventListener("DOMContentLoaded", function () {
           view.popup.actions.add({
             title: `${count}`,
             id: "like-action",
-            className: `esri-icon-thumbs-up ${liked ? "liked" : ""}`
+            className: "esri-icon-thumbs-up"
           });
+
+          // Style the icon if liked
+          setTimeout(() => {
+            const buttons = document.querySelectorAll(".esri-popup__action-button");
+            buttons.forEach(btn => {
+              if (btn.getAttribute("aria-label") === `${count}`) {
+                btn.classList.toggle("liked", liked);
+              }
+            });
+          }, 0);
         });
 
         reactiveUtils.on(() => view.popup.viewModel, "trigger-action", async (event) => {
           if (event.action.id !== "like-action") return;
 
           const feature = view.popup?.features?.[0];
-          if (!feature) return;
+          if (!feature || !feature.attributes?.objectid) return;
 
-          const objectId = feature.getAttribute?.("objectid")?.toString();
-          if (!objectId) return;
-
+          const objectId = feature.attributes.objectid.toString();
           const updatedCount = await toggleLike(objectId);
+          const likedNow = await hasUserLiked(objectId);
+
           const likeAction = view.popup.actions.find(a => a.id === "like-action");
-          if (likeAction) {
-            likeAction.title = `${updatedCount}`;
-            const likedNow = await hasUserLiked(objectId);
-            likeAction.className = `esri-icon-thumbs-up ${likedNow ? "liked" : ""}`;
-          }
+          if (likeAction) likeAction.title = `${updatedCount}`;
+
+          const buttons = document.querySelectorAll(".esri-popup__action-button");
+          buttons.forEach(btn => {
+            if (btn.getAttribute("aria-label") === `${updatedCount}`) {
+              btn.classList.toggle("liked", likedNow);
+            }
+          });
         });
       });
     });
