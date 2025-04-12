@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Safe Routes Like Demo</title>
+
+  <!-- ArcGIS API CSS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
+
   <style>
     html, body, #viewDiv {
       margin: 0;
@@ -13,23 +16,20 @@
       width: 100%;
     }
 
-    /* Hide popup button label (just show the icon + count) */
+    /* Hide popup label text and style like icon */
     .esri-popup__action-text {
       display: none;
     }
 
-    /* Style the thumbs up icon */
     .esri-popup__action-button .esri-icon-thumbs-up::before {
-      color: #1a4f5c;
-      transform: scale(1.2);
+      color: #30737b;
+      content: "\e610";
     }
 
-    /* Highlight when liked */
     .esri-popup__action-button.liked .esri-icon-thumbs-up::before {
       font-weight: bold;
     }
 
-    /* Animated +1 burst */
     .like-burst {
       position: absolute;
       font-size: 24px;
@@ -48,7 +48,7 @@
 <body>
   <div id="viewDiv"></div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
   <script>
@@ -61,10 +61,10 @@
     window.db = firebase.firestore();
   </script>
 
-  <!-- ArcGIS JS API -->
+  <!-- ArcGIS API -->
   <script src="https://js.arcgis.com/4.27/"></script>
 
-  <!-- App Logic -->
+  <!-- App -->
   <script src="app.js"></script>
 </body>
 </html>
