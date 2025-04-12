@@ -79,29 +79,36 @@ document.addEventListener("DOMContentLoaded", function () {
         reactiveUtils.watch(() => view.popup.visible, async (visible) => {
           console.log("👁 Popup visibility changed:", visible);
           if (!visible) return;
-
-          const feature = view.popup?.features?.[0];
+        
+          const feature = view.popup?.features?.[0] ?? view.popup?.selectedFeature;
+          console.log("🔎 Raw feature object:", feature);
+        
           if (!feature) {
             console.warn("⚠️ No feature selected.");
             return;
           }
-
-          const objectId = feature?.attributes?.objectid?.toString();
+        
+          const attributes = feature.attributes;
+          console.log("📄 Attributes object:", attributes);
+          console.log("🗝️ Available keys:", attributes ? Object.keys(attributes) : "None");
+        
+          const objectId = attributes?.objectid ?? attributes?.OBJECTID;
           if (!objectId) {
             console.warn("⚠️ No valid objectid on feature.");
             return;
           }
-
-          const count = await getLikeCount(objectId);
-          const liked = await hasUserLiked(objectId);
-
-          console.log(`👍 Like count for objectid ${objectId}: ${count}, liked: ${liked}`);
-
+        
+          const objectIdStr = objectId.toString();
+          const count = await getLikeCount(objectIdStr);
+          const liked = await hasUserLiked(objectIdStr);
+        
+          console.log(`👍 Like count for objectid ${objectIdStr}: ${count}, liked: ${liked}`);
+        
           view.popup.actions.removeAll();
           view.popup.actions.add({
             title: `${count}`,
             id: "like-action",
-            className: `esri-icon-thumbs-up ${liked ? "liked" : ""}`
+            className: liked ? "esri-icon-thumbs-up liked" : "esri-icon-thumbs-up"
           });
         });
 
