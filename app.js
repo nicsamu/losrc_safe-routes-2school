@@ -75,31 +75,41 @@ document.addEventListener("DOMContentLoaded", function () {
       reactiveUtils.when(() => view.popup.viewModel, () => {
         console.log("🔁 Popup viewModel ready");
 
-        reactiveUtils.watch(() => view.popup.selectedFeature, async (feature) => {
-          if (!feature?.attributes) {
-            console.warn("⚠️ No feature selected or no attributes.");
-            return;
+        reactiveUtils.watch(
+          () => view.popup.visible,
+          async (visible) => {
+            console.log("👁 Popup visible changed:", visible);
+            if (!visible) return;
+        
+            // Wait briefly for popup to fully load
+            await new Promise((res) => setTimeout(res, 250));
+        
+            const feature = view.popup.features?.[0];
+            console.log("✅ Selected popup feature after wait:", feature);
+        
+            const attributes = feature?.attributes || {};
+            const objectId = attributes.objectid?.toString() || attributes.OBJECTID?.toString();
+        
+            if (!objectId) {
+              console.warn("⚠️ No valid objectid found in attributes:", attributes);
+              return;
+            }
+        
+            const count = await getLikeCount(objectId);
+            const liked = await hasUserLiked(objectId);
+        
+            console.log(`👍 Like count for objectid ${objectId}: ${count}, liked: ${liked}`);
+        
+            view.popup.actions.removeAll();
+            view.popup.actions.add({
+              title: `${count}`,
+              id: "like-action",
+              className: `esri-icon-thumbs-up ${liked ? "liked" : ""}`
+            });
+        
+            console.log("🆕 Like button injected into popup!");
           }
-
-          const objectId = feature.attributes.objectid?.toString();
-          if (!objectId) {
-            console.warn("⚠️ No objectid on feature.");
-            return;
-          }
-
-          const count = await getLikeCount(objectId);
-          const liked = await hasUserLiked(objectId);
-          console.log(`👍 Like count for objectid ${objectId}: ${count}, liked: ${liked}`);
-
-          // Add like button
-          view.popup.actions.removeAll();
-          view.popup.actions.add({
-            title: `${count}`,
-            id: "like-action",
-            className: `esri-icon-thumbs-up ${liked ? "liked" : ""}`
-          });
-        });
-
+        );
         view.popup.viewModel.on("trigger-action", async (event) => {
           if (event.action.id !== "like-action") return;
 
